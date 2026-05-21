@@ -17,6 +17,10 @@ import { NormalizerModule } from './normalizer/normalizer.module.js';
 import { RulesModule } from './rules/rules.module.js';
 import { ReadinessModule } from './readiness/readiness.module.js';
 import { ConnectorSyncModule } from './connector-sync/connector-sync.module.js';
+import { AiModule } from './ai/ai.module.js';
+import { IntegrationsModule } from './integrations/integrations.module.js';
+import { AuditorShareModule } from './auditor-share/auditor-share.module.js';
+import { ExportModule } from './export/export.module.js';
 
 @Module({
   imports: [
@@ -35,6 +39,10 @@ import { ConnectorSyncModule } from './connector-sync/connector-sync.module.js';
     RulesModule,
     ReadinessModule,
     ConnectorSyncModule,
+    AiModule,
+    IntegrationsModule,
+    AuditorShareModule,
+    ExportModule,
   ],
   providers: [
     {

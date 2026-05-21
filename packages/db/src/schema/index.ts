@@ -8,3 +8,5 @@ export * from './controls';
 export * from './control-states';
 export * from './evidence-records';
 export * from './audit-events';
+export * from './integration-configs';
+export * from './auditor-shares';

@@ -1,7 +1,7 @@
 'use client';
 
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
-import { RefreshCw } from 'lucide-react';
+import { RefreshCw, Download, FileText } from 'lucide-react';
 
 import { apiClient } from '@/lib/api-client';
 import { Button } from '@/components/ui/button';
@@ -10,6 +10,7 @@ import { ReadinessScoreGauge } from './readiness-score-gauge';
 import { ControlTable } from './control-table';
 import { FailedControlsPanel } from './failed-controls-panel';
 import { ConnectorStatusBar } from './connector-status-bar';
+import { AuditorShareButton } from './auditor-share-button';
 import type { ReadinessSummary, ControlStateWithControl } from '@/types/readiness';
 
 export function ReadinessDashboard({
@@ -83,17 +84,36 @@ export function ReadinessDashboard({
             </p>
           )}
         </div>
-        <Button
-          variant="outline"
-          onClick={() => evaluateMutation.mutate()}
-          disabled={evaluateMutation.isPending}
-          size="sm"
-        >
-          <RefreshCw
-            className={`h-4 w-4 mr-2 ${evaluateMutation.isPending ? 'animate-spin' : ''}`}
-          />
-          Re-evaluate
-        </Button>
+        <div className="flex items-center gap-2 flex-wrap">
+          <Button
+            variant="outline"
+            onClick={() => evaluateMutation.mutate()}
+            disabled={evaluateMutation.isPending}
+            size="sm"
+          >
+            <RefreshCw
+              className={`h-4 w-4 mr-2 ${evaluateMutation.isPending ? 'animate-spin' : ''}`}
+            />
+            Re-evaluate
+          </Button>
+          <AuditorShareButton workspaceId={workspaceId} token={token} />
+          <Button
+            variant="outline"
+            size="sm"
+            onClick={() => window.open(`${process.env.NEXT_PUBLIC_API_URL}/workspaces/${workspaceId}/export?format=csv`, '_blank')}
+          >
+            <Download className="h-4 w-4 mr-2" />
+            Export CSV
+          </Button>
+          <Button
+            variant="outline"
+            size="sm"
+            onClick={() => window.open(`${process.env.NEXT_PUBLIC_API_URL}/workspaces/${workspaceId}/export?format=pdf`, '_blank')}
+          >
+            <FileText className="h-4 w-4 mr-2" />
+            Export PDF
+          </Button>
+        </div>
       </div>
 
       {connectors && connectors.length > 0 && (

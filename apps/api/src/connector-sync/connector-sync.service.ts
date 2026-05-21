@@ -1,4 +1,4 @@
-import { Inject, Injectable, Logger } from '@nestjs/common';
+import { Inject, Injectable, Logger, Optional } from '@nestjs/common';
 import Redis from 'ioredis';
 import type { Job } from 'bullmq';
 import {
@@ -6,6 +6,8 @@ import {
   ConnectorRunner,
   ConnectorScheduler,
   GitHubConnector,
+  GoogleWorkspaceConnector,
+  OktaConnector,
 } from '@compliance/connector-sdk';
 import type { ConnectorJobData, ConnectorJobResult } from '@compliance/connector-sdk';
 import type { DbClient } from '@compliance/db';
@@ -15,6 +17,7 @@ import { DB_CLIENT } from '../database/database.module.js';
 import { SecretsService } from '../secrets/secrets.service.js';
 import { ConnectorConfigsService } from '../connector-configs/connector-configs.service.js';
 import { NormalizerService } from '../normalizer/normalizer.service.js';
+import type { SlackService } from '../integrations/slack/slack.service.js';
 import { REDIS_CLIENT } from './connector-sync.module.js';
 
 @Injectable()
@@ -28,6 +31,7 @@ export class ConnectorSyncService {
     private readonly secretsService: SecretsService,
     private readonly connectorConfigsService: ConnectorConfigsService,
     private readonly normalizerService: NormalizerService,
+    @Optional() private readonly slackService?: SlackService,
   ) {
     this.scheduler = new ConnectorScheduler(redis);
   }
@@ -77,8 +81,24 @@ export class ConnectorSyncService {
       },
     });
 
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    await runner.run(connector as any);
+    try {
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      await runner.run(connector as any);
+    } catch (err) {
+      const errorMsg = err instanceof Error ? err.message : String(err);
+      if (this.slackService) {
+        void this.slackService
+          .notifyConnectorFailure(
+            // workspaceId is org-level for connectors; pass orgId as placeholder
+            orgId,
+            orgId,
+            connectorConfig.displayName,
+            errorMsg,
+          )
+          .catch((e) => this.logger.warn(`Slack notification failed: ${String(e)}`));
+      }
+      throw err;
+    }
 
     return {
       factCount: 0, // Updated by the runner via DB
@@ -99,6 +119,10 @@ export class ConnectorSyncService {
         return new AwsConnector(credentials as any, config as any);
       case CONNECTOR_TYPE.GITHUB:
         return new GitHubConnector(credentials as any, config as any);
+      case CONNECTOR_TYPE.GOOGLE_WORKSPACE:
+        return new GoogleWorkspaceConnector(credentials as any, config as any);
+      case CONNECTOR_TYPE.OKTA:
+        return new OktaConnector(credentials as any, config as any);
       default:
         throw new Error(`Unsupported connector type: ${connectorType}`);
     }

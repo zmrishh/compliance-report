@@ -100,6 +100,8 @@ export class ReadinessService {
         notes: controlStates.notes,
         waivedAt: controlStates.waivedAt,
         evidenceIds: controlStates.evidenceIds,
+        jiraTicketId: controlStates.jiraTicketId,
+        jiraTicketUrl: controlStates.jiraTicketUrl,
         control: {
           controlId: controls.controlId,
           title: controls.title,

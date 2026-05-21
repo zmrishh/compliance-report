@@ -2,7 +2,7 @@
 
 import Link from 'next/link';
 import { useParams, usePathname } from 'next/navigation';
-import { BarChart3, Plug, ChevronRight } from 'lucide-react';
+import { BarChart3, Plug, Zap } from 'lucide-react';
 import { cn } from '@/lib/utils';
 
 export function WorkspaceSidebarNav() {
@@ -15,6 +15,7 @@ export function WorkspaceSidebarNav() {
   const links = [
     { href: `/workspaces/${workspaceId}/readiness`, label: 'Readiness', icon: BarChart3 },
     { href: `/workspaces/${workspaceId}/settings/connectors`, label: 'Connectors', icon: Plug },
+    { href: `/workspaces/${workspaceId}/settings/integrations`, label: 'Integrations', icon: Zap },
   ];
 
   return (

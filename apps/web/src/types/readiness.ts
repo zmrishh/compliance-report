@@ -28,6 +28,8 @@ export interface ControlStateWithControl {
   notes: string | null;
   waivedAt: string | null;
   evidenceIds: string[];
+  jiraTicketId: string | null;
+  jiraTicketUrl: string | null;
   control: {
     controlId: string;
     title: string;

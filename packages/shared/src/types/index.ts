@@ -5,6 +5,7 @@ import type {
   ControlStatus,
   EvidenceSourceType,
   Framework,
+  IntegrationType,
   Severity,
   SourceType,
   WorkspaceRole,
@@ -192,4 +193,35 @@ export interface PaginatedResponse<T> {
   data: T[];
   nextCursor: string | null;
   hasMore: boolean;
+}
+
+export interface IntegrationConfig {
+  id: string;
+  orgId: string;
+  workspaceId: string | null;
+  type: IntegrationType;
+  config: Record<string, unknown>;
+  credentialsRef: string;
+  isActive: boolean;
+  createdAt: Date;
+  updatedAt: Date;
+}
+
+export interface AuditorShare {
+  id: string;
+  workspaceId: string;
+  orgId: string;
+  label: string;
+  expiresAt: Date;
+  createdByUserId: string;
+  revokedAt: Date | null;
+  createdAt: Date;
+}
+
+export interface AiDraftResult {
+  type: 'policy' | 'procedure';
+  controlId: string;
+  content: string;
+  model: string;
+  generatedAt: Date;
 }

@@ -1,4 +1,4 @@
-import { Inject, Injectable, Logger, OnModuleInit } from '@nestjs/common';
+import { Inject, Injectable, Logger, OnModuleInit, Optional } from '@nestjs/common';
 import { OnEvent } from '@nestjs/event-emitter';
 import { and, eq, inArray } from 'drizzle-orm';
 import { controlStates, controls, evidenceRecords, rawFacts, workspaces } from '@compliance/db';
@@ -8,6 +8,7 @@ import type { RawFact as DbRawFact } from '@compliance/db';
 
 import { DB_CLIENT } from '../database/database.module.js';
 import { FACTS_NEW_EVENT, type FactsNewPayload } from '../normalizer/normalizer.service.js';
+import type { SlackService } from '../integrations/slack/slack.service.js';
 import { testRootMfa } from './tests/soc2-cc6-1-root-mfa.js';
 import { testNoRootAccessKeys } from './tests/soc2-cc9-1-no-root-access-keys.js';
 import { testIamKeyRotation } from './tests/soc2-cc6-1-iam-key-rotation.js';
@@ -25,6 +26,10 @@ import {
   testPasswordPolicy,
   testS3PublicAccessBlocked,
 } from './tests/soc2-remaining.js';
+import { testGwsMfaEnrolled } from './tests/soc2-cc6-1-gws-mfa.js';
+import { testGwsDormantUsers } from './tests/soc2-cc6-3-gws-dormant.js';
+import { testOktaMfaEnrolled } from './tests/soc2-cc6-1-okta-mfa.js';
+import { testOktaDormantUsers } from './tests/soc2-cc6-3-okta-dormant.js';
 
 type TestFn = (facts: DbRawFact[]) => ControlTestResult;
 
@@ -44,13 +49,20 @@ const TEST_REGISTRY: Record<string, TestFn> = {
   'soc2:cc9.1:no-root-access-keys': testNoRootAccessKeys,
   'soc2:cc9.1:password-policy': testPasswordPolicy,
   'soc2:cc9.1:org-audit-log-retained': testOrgAuditLogRetained,
+  'soc2:cc6.1:gws-mfa-enrolled': testGwsMfaEnrolled,
+  'soc2:cc6.3:gws-dormant-users': testGwsDormantUsers,
+  'soc2:cc6.1:okta-mfa-enrolled': testOktaMfaEnrolled,
+  'soc2:cc6.3:okta-dormant-users': testOktaDormantUsers,
 };
 
 @Injectable()
 export class RulesEngineService implements OnModuleInit {
   private readonly logger = new Logger(RulesEngineService.name);
 
-  constructor(@Inject(DB_CLIENT) private readonly db: DbClient) {}
+  constructor(
+    @Inject(DB_CLIENT) private readonly db: DbClient,
+    @Optional() private readonly slackService?: SlackService,
+  ) {}
 
   onModuleInit() {
     this.logger.log(`Rules engine initialized with ${Object.keys(TEST_REGISTRY).length} test functions`);
@@ -141,7 +153,7 @@ export class RulesEngineService implements OnModuleInit {
 
     // Upsert control_state
     const [existingState] = await this.db
-      .select({ id: controlStates.id, ownerId: controlStates.ownerId, notes: controlStates.notes, waivedAt: controlStates.waivedAt })
+      .select({ id: controlStates.id, ownerId: controlStates.ownerId, notes: controlStates.notes, waivedAt: controlStates.waivedAt, status: controlStates.status })
       .from(controlStates)
       .where(
         and(
@@ -153,6 +165,8 @@ export class RulesEngineService implements OnModuleInit {
 
     // Do not overwrite a waived control
     if (existingState?.waivedAt) return;
+
+    const previousStatus = existingState?.status ?? null;
 
     if (existingState) {
       await this.db
@@ -174,6 +188,25 @@ export class RulesEngineService implements OnModuleInit {
         detail: result.detail,
         evidenceIds: result.evidenceIds,
       });
+    }
+
+    // Fire Slack regression alert when a passing control flips to failing
+    if (
+      this.slackService &&
+      previousStatus === CONTROL_STATUS.PASS &&
+      result.status === CONTROL_STATUS.FAIL
+    ) {
+      void this.slackService
+        .notifyRegression(
+          workspaceId,
+          orgId,
+          control.title,
+          control.severity,
+          previousStatus,
+          result.status,
+          control.remediationGuidance,
+        )
+        .catch((err) => this.logger.warn(`Slack notification failed: ${String(err)}`));
     }
 
     // Snapshot evidence records for PASS/FAIL states

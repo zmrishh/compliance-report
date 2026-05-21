@@ -1,6 +1,7 @@
 'use client';
 
 import { useState } from 'react';
+import { useMutation } from '@tanstack/react-query';
 import {
   CheckCircle2,
   XCircle,
@@ -8,11 +9,18 @@ import {
   MinusCircle,
   ChevronDown,
   ChevronUp,
+  Sparkles,
+  ExternalLink,
+  Ticket,
+  Copy,
+  Check,
 } from 'lucide-react';
 
+import { apiClient } from '@/lib/api-client';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
+import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
 import type { ControlStateWithControl } from '@/types/readiness';
 
 const STATUS_CONFIG = {
@@ -231,41 +239,181 @@ function ControlRow({
         </td>
       </tr>
       {expanded && (
-        <tr className="border-b border-border bg-muted/10">
-          <td colSpan={5} className="px-6 py-4">
-            <div className="space-y-3">
-              {control.detail && (
-                <div>
-                  <p className="text-xs font-medium text-muted-foreground mb-1">Finding</p>
-                  <p className="text-sm">{control.detail}</p>
-                </div>
-              )}
-              <div>
-                <p className="text-xs font-medium text-muted-foreground mb-1">Description</p>
-                <p className="text-sm text-muted-foreground">{control.control.description}</p>
-              </div>
-              {control.status === 'FAIL' && (
-                <div>
-                  <p className="text-xs font-medium text-muted-foreground mb-1">Remediation</p>
-                  <p className="text-sm text-muted-foreground">{control.control.remediationGuidance}</p>
-                </div>
-              )}
-              {control.notes && (
-                <div>
-                  <p className="text-xs font-medium text-muted-foreground mb-1">Notes</p>
-                  <p className="text-sm">{control.notes}</p>
-                </div>
-              )}
-              <div className="flex items-center gap-2 text-xs text-muted-foreground">
-                <span>Evidence sources:</span>
-                {control.control.evidenceSources.map((s) => (
-                  <code key={s} className="bg-muted px-1.5 py-0.5 rounded text-xs">{s}</code>
-                ))}
-              </div>
-            </div>
-          </td>
-        </tr>
+        <ExpandedRow
+          control={control}
+          workspaceId={workspaceId}
+          token={token}
+          onUpdate={onUpdate}
+        />
       )}
+    </>
+  );
+}
+
+interface AiDraftResult {
+  type: string;
+  controlId: string;
+  content: string;
+  model: string;
+  generatedAt: string;
+}
+
+function ExpandedRow({
+  control,
+  workspaceId,
+  token,
+  onUpdate,
+}: {
+  control: ControlStateWithControl;
+  workspaceId: string;
+  token: string;
+  onUpdate: () => void;
+}) {
+  const [aiDialogOpen, setAiDialogOpen] = useState(false);
+  const [aiDraft, setAiDraft] = useState<AiDraftResult | null>(null);
+  const [copied, setCopied] = useState(false);
+
+  const aiDraftMutation = useMutation({
+    mutationFn: (type: 'policy' | 'procedure') =>
+      apiClient.post<AiDraftResult>(
+        `/workspaces/${workspaceId}/ai/draft`,
+        { controlId: control.controlId, type },
+        token,
+      ),
+    onSuccess: (data) => {
+      setAiDraft(data);
+      setAiDialogOpen(true);
+    },
+  });
+
+  const jiraMutation = useMutation({
+    mutationFn: () =>
+      apiClient.post<{ ticketKey: string; ticketUrl: string }>(
+        `/workspaces/${workspaceId}/controls/${control.id}/jira-ticket`,
+        {},
+        token,
+      ),
+    onSuccess: () => onUpdate(),
+  });
+
+  function copyToClipboard(text: string) {
+    void navigator.clipboard.writeText(text).then(() => {
+      setCopied(true);
+      setTimeout(() => setCopied(false), 2000);
+    });
+  }
+
+  return (
+    <>
+      <tr className="border-b border-border bg-muted/10">
+        <td colSpan={5} className="px-6 py-4">
+          <div className="space-y-3">
+            {control.detail && (
+              <div>
+                <p className="text-xs font-medium text-muted-foreground mb-1">Finding</p>
+                <p className="text-sm">{control.detail}</p>
+              </div>
+            )}
+            <div>
+              <p className="text-xs font-medium text-muted-foreground mb-1">Description</p>
+              <p className="text-sm text-muted-foreground">{control.control.description}</p>
+            </div>
+            {control.status === 'FAIL' && (
+              <div>
+                <p className="text-xs font-medium text-muted-foreground mb-1">Remediation</p>
+                <p className="text-sm text-muted-foreground">{control.control.remediationGuidance}</p>
+              </div>
+            )}
+            {control.notes && (
+              <div>
+                <p className="text-xs font-medium text-muted-foreground mb-1">Notes</p>
+                <p className="text-sm">{control.notes}</p>
+              </div>
+            )}
+            <div className="flex items-center gap-2 text-xs text-muted-foreground">
+              <span>Evidence sources:</span>
+              {control.control.evidenceSources.map((s) => (
+                <code key={s} className="bg-muted px-1.5 py-0.5 rounded text-xs">{s}</code>
+              ))}
+            </div>
+            <div className="flex items-center gap-2 pt-1 border-t border-border flex-wrap">
+              <Button
+                variant="outline"
+                size="sm"
+                onClick={() => aiDraftMutation.mutate('policy')}
+                disabled={aiDraftMutation.isPending}
+              >
+                <Sparkles className="h-3 w-3 mr-1" />
+                {aiDraftMutation.isPending ? 'Drafting...' : 'Draft policy'}
+              </Button>
+              <Button
+                variant="outline"
+                size="sm"
+                onClick={() => aiDraftMutation.mutate('procedure')}
+                disabled={aiDraftMutation.isPending}
+              >
+                <Sparkles className="h-3 w-3 mr-1" />
+                Draft procedure
+              </Button>
+              {control.status === 'FAIL' && (
+                control.jiraTicketUrl ? (
+                  <Button variant="outline" size="sm" asChild>
+                    <a href={control.jiraTicketUrl} target="_blank" rel="noopener noreferrer">
+                      <Ticket className="h-3 w-3 mr-1" />
+                      View Jira ticket
+                      <ExternalLink className="h-3 w-3 ml-1" />
+                    </a>
+                  </Button>
+                ) : (
+                  <Button
+                    variant="outline"
+                    size="sm"
+                    onClick={() => jiraMutation.mutate()}
+                    disabled={jiraMutation.isPending}
+                  >
+                    <Ticket className="h-3 w-3 mr-1" />
+                    {jiraMutation.isPending ? 'Creating...' : 'Create Jira ticket'}
+                  </Button>
+                )
+              )}
+              {aiDraftMutation.isError && (
+                <p className="text-xs text-destructive ml-2">
+                  {aiDraftMutation.error instanceof Error ? aiDraftMutation.error.message : 'Draft failed'}
+                </p>
+              )}
+            </div>
+          </div>
+        </td>
+      </tr>
+
+      <Dialog open={aiDialogOpen} onOpenChange={setAiDialogOpen}>
+        <DialogContent className="max-w-2xl max-h-[80vh]">
+          <DialogHeader>
+            <DialogTitle className="flex items-center gap-2">
+              <Sparkles className="h-4 w-4" />
+              AI-Generated {aiDraft?.type === 'policy' ? 'Policy' : 'Procedure'} Draft
+            </DialogTitle>
+          </DialogHeader>
+          <div className="flex justify-end mb-2">
+            <Button
+              variant="outline"
+              size="sm"
+              onClick={() => aiDraft && copyToClipboard(aiDraft.content)}
+            >
+              {copied ? <Check className="h-3 w-3 mr-1 text-green-600" /> : <Copy className="h-3 w-3 mr-1" />}
+              Copy
+            </Button>
+          </div>
+          <div className="overflow-y-auto max-h-[55vh] border border-border rounded-md p-4 bg-muted/30">
+            <pre className="text-sm whitespace-pre-wrap font-mono leading-relaxed">
+              {aiDraft?.content}
+            </pre>
+          </div>
+          <p className="text-xs text-muted-foreground mt-2">
+            Model: {aiDraft?.model} — Generated: {aiDraft?.generatedAt ? new Date(aiDraft.generatedAt).toLocaleString() : ''}
+          </p>
+        </DialogContent>
+      </Dialog>
     </>
   );
 }

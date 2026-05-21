@@ -4,6 +4,7 @@ import {
   CONNECTOR_TYPE,
   CONTROL_STATUS,
   FRAMEWORKS,
+  INTEGRATION_TYPE,
   SEVERITY,
   WORKSPACE_ROLE,
 } from '../constants/index';
@@ -81,6 +82,18 @@ const githubCredentialsSchema = z.union([
   }),
 ]);
 
+const googleWorkspaceCredentialsSchema = z.object({
+  type: z.literal('service_account'),
+  clientEmail: z.string().email(),
+  privateKey: z.string().min(1),
+  impersonateEmail: z.string().email(),
+});
+
+const oktaCredentialsSchema = z.object({
+  type: z.literal('api_token'),
+  token: z.string().min(1),
+});
+
 export const createConnectorConfigSchema = z.discriminatedUnion('connectorType', [
   z.object({
     connectorType: z.literal(CONNECTOR_TYPE.AWS),
@@ -97,6 +110,22 @@ export const createConnectorConfigSchema = z.discriminatedUnion('connectorType',
     credentials: githubCredentialsSchema,
     config: z.object({
       orgLogin: z.string().min(1),
+    }),
+  }),
+  z.object({
+    connectorType: z.literal(CONNECTOR_TYPE.GOOGLE_WORKSPACE),
+    displayName: z.string().min(1).max(200),
+    credentials: googleWorkspaceCredentialsSchema,
+    config: z.object({
+      domain: z.string().min(1),
+    }),
+  }),
+  z.object({
+    connectorType: z.literal(CONNECTOR_TYPE.OKTA),
+    displayName: z.string().min(1).max(200),
+    credentials: oktaCredentialsSchema,
+    config: z.object({
+      orgUrl: z.string().url(),
     }),
   }),
 ]);
@@ -138,11 +167,65 @@ export type AddWorkspaceMemberDto = z.infer<typeof addWorkspaceMemberSchema>;
 export type UpdateControlStateDto = z.infer<typeof updateControlStateSchema>;
 export type WaiveControlDto = z.infer<typeof waiveControlSchema>;
 
+// ─── AI Drafting ──────────────────────────────────────────────────────────────
+
+export const aiDraftSchema = z.object({
+  controlId: z.string().min(1),
+  type: z.enum(['policy', 'procedure']),
+});
+
+export type AiDraftDto = z.infer<typeof aiDraftSchema>;
+
+// ─── Jira Integration ─────────────────────────────────────────────────────────
+
+export const createJiraTicketSchema = z.object({
+  summary: z.string().min(1).max(255).optional(),
+  description: z.string().max(10000).optional(),
+});
+
+export type CreateJiraTicketDto = z.infer<typeof createJiraTicketSchema>;
+
+// ─── Integration Config ───────────────────────────────────────────────────────
+
+const jiraIntegrationConfigSchema = z.object({
+  type: z.literal(INTEGRATION_TYPE.JIRA),
+  config: z.object({
+    baseUrl: z.string().url(),
+    projectKey: z.string().min(1).max(20),
+    email: z.string().email(),
+  }),
+  apiToken: z.string().min(1),
+});
+
+const slackIntegrationConfigSchema = z.object({
+  type: z.literal(INTEGRATION_TYPE.SLACK),
+  config: z.object({
+    channelName: z.string().min(1).optional(),
+  }),
+  webhookUrl: z.string().url(),
+});
+
+export const createIntegrationConfigSchema = z.discriminatedUnion('type', [
+  jiraIntegrationConfigSchema,
+  slackIntegrationConfigSchema,
+]);
+
+export type CreateIntegrationConfigDto = z.infer<typeof createIntegrationConfigSchema>;
+
+// ─── Auditor Share ────────────────────────────────────────────────────────────
+
+export const createAuditorShareSchema = z.object({
+  label: z.string().min(1).max(200).default('Auditor access'),
+  expiresInDays: z.coerce.number().int().min(1).max(90).default(30),
+});
+
+export type CreateAuditorShareDto = z.infer<typeof createAuditorShareSchema>;
+
 // ─── Outbound schemas (strip sensitive fields) ────────────────────────────────
 
 export const connectorConfigResponseSchema = z.object({
-  id: z.string().uuid(),
-  orgId: z.string().uuid(),
+  id: z.string(),
+  orgId: z.string(),
   type: z.enum([
     CONNECTOR_TYPE.AWS,
     CONNECTOR_TYPE.GITHUB,
@@ -159,8 +242,8 @@ export const connectorConfigResponseSchema = z.object({
 });
 
 export const controlStateResponseSchema = z.object({
-  id: z.string().uuid(),
-  workspaceId: z.string().uuid(),
+  id: z.string(),
+  workspaceId: z.string(),
   controlId: z.string(),
   status: z.enum([
     CONTROL_STATUS.PASS,

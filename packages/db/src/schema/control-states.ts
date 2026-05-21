@@ -25,6 +25,8 @@ export const controlStates = pgTable(
     waivedAt: timestamp('waived_at', { withTimezone: true }),
     waivedBy: text('waived_by'),
     waivedReason: text('waived_reason'),
+    jiraTicketId: text('jira_ticket_id'),
+    jiraTicketUrl: text('jira_ticket_url'),
     createdAt: timestamp('created_at', { withTimezone: true }).notNull().defaultNow(),
     updatedAt: timestamp('updated_at', { withTimezone: true }).notNull().defaultNow(),
   },

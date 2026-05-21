@@ -25,12 +25,13 @@
     "@aws-sdk/client-securityhub": "^3.600.0",
     "@aws-sdk/client-sts": "^3.600.0",
     "@aws-sdk/types": "^3.600.0",
-    "drizzle-orm": "^0.31.4",
     "@compliance/db": "workspace:*",
     "@compliance/shared": "workspace:*",
-    "@octokit/rest": "^21.0.0",
     "@octokit/auth-app": "^7.1.0",
+    "@octokit/rest": "^21.0.0",
     "bullmq": "^5.8.1",
+    "drizzle-orm": "^0.31.4",
+    "googleapis": "^140.0.0",
     "ioredis": "^5.3.2"
   },
   "devDependencies": {

@@ -7,3 +7,7 @@ export { AwsConnector } from './connectors/aws/index';
 export type { AwsCredentials, AwsConfig } from './connectors/aws/index';
 export { GitHubConnector } from './connectors/github/index';
 export type { GitHubCredentials, GitHubConfig } from './connectors/github/index';
+export { GoogleWorkspaceConnector } from './connectors/google-workspace/index';
+export type { GoogleWorkspaceCredentials, GoogleWorkspaceConfig } from './connectors/google-workspace/index';
+export { OktaConnector } from './connectors/okta/index';
+export type { OktaCredentials, OktaConfig } from './connectors/okta/index';

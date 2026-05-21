@@ -1,6 +1,6 @@
 'use client';
 
-import { useState } from 'react';
+import React, { useState } from 'react';
 import { useMutation } from '@tanstack/react-query';
 import { CheckCircle2, XCircle, Loader2, RefreshCw, Trash2, Plus, ExternalLink } from 'lucide-react';
 
@@ -211,6 +211,10 @@ function ConnectModal({
           <AwsConnectForm token={token} onConnected={() => { onConnected(); onClose(); }} />
         ) : connectorType === 'github' ? (
           <GitHubConnectForm token={token} onConnected={() => { onConnected(); onClose(); }} />
+        ) : connectorType === 'google_workspace' ? (
+          <GoogleWorkspaceConnectForm token={token} onConnected={() => { onConnected(); onClose(); }} />
+        ) : connectorType === 'okta' ? (
+          <OktaConnectForm token={token} onConnected={() => { onConnected(); onClose(); }} />
         ) : (
           <p className="text-sm text-muted-foreground">Connector type not supported yet.</p>
         )}
@@ -436,6 +440,136 @@ function GitHubConnectForm({
       <div className="flex justify-end gap-2 pt-2">
         <Button type="submit" disabled={mutation.isPending}>
           {mutation.isPending ? 'Connecting…' : 'Connect GitHub'}
+        </Button>
+      </div>
+      {mutation.isError && (
+        <p className="text-sm text-destructive">
+          {mutation.error instanceof Error ? mutation.error.message : 'Connection failed'}
+        </p>
+      )}
+    </form>
+  );
+}
+
+function GoogleWorkspaceConnectForm({
+  token,
+  onConnected,
+}: {
+  token: string;
+  onConnected: () => void;
+}) {
+  const [displayName, setDisplayName] = React.useState('Google Workspace');
+  const [domain, setDomain] = React.useState('');
+  const [clientEmail, setClientEmail] = React.useState('');
+  const [privateKey, setPrivateKey] = React.useState('');
+  const [impersonateEmail, setImpersonateEmail] = React.useState('');
+
+  const mutation = useMutation({
+    mutationFn: () =>
+      apiClient.post(
+        '/connector-configs',
+        {
+          connectorType: 'google_workspace',
+          displayName,
+          credentials: { type: 'service_account', clientEmail, privateKey, impersonateEmail },
+          config: { domain },
+        },
+        token,
+      ),
+    onSuccess: onConnected,
+  });
+
+  return (
+    <form onSubmit={(e) => { e.preventDefault(); mutation.mutate(); }} className="space-y-4">
+      <div className="space-y-2">
+        <Label>Display name</Label>
+        <Input value={displayName} onChange={(e) => setDisplayName(e.target.value)} required />
+      </div>
+      <div className="space-y-2">
+        <Label>Primary domain</Label>
+        <Input value={domain} onChange={(e) => setDomain(e.target.value)} placeholder="example.com" required />
+      </div>
+      <div className="p-3 bg-blue-50 dark:bg-blue-900/20 rounded-md text-xs text-blue-800 dark:text-blue-300">
+        Create a service account with domain-wide delegation. The impersonate email must be a Super Admin.
+      </div>
+      <div className="space-y-2">
+        <Label>Service account email</Label>
+        <Input value={clientEmail} onChange={(e) => setClientEmail(e.target.value)} placeholder="service@project.iam.gserviceaccount.com" required />
+      </div>
+      <div className="space-y-2">
+        <Label>Super Admin email to impersonate</Label>
+        <Input value={impersonateEmail} onChange={(e) => setImpersonateEmail(e.target.value)} placeholder="admin@example.com" required />
+      </div>
+      <div className="space-y-2">
+        <Label>Service account private key (PEM)</Label>
+        <textarea
+          className="w-full border border-input rounded-md p-2 text-xs font-mono h-28 bg-background resize-none"
+          value={privateKey}
+          onChange={(e) => setPrivateKey(e.target.value)}
+          placeholder="-----BEGIN RSA PRIVATE KEY-----..."
+          required
+        />
+      </div>
+      <div className="flex justify-end gap-2 pt-2">
+        <Button type="submit" disabled={mutation.isPending}>
+          {mutation.isPending ? 'Connecting...' : 'Connect Google Workspace'}
+        </Button>
+      </div>
+      {mutation.isError && (
+        <p className="text-sm text-destructive">
+          {mutation.error instanceof Error ? mutation.error.message : 'Connection failed'}
+        </p>
+      )}
+    </form>
+  );
+}
+
+function OktaConnectForm({
+  token,
+  onConnected,
+}: {
+  token: string;
+  onConnected: () => void;
+}) {
+  const [displayName, setDisplayName] = React.useState('Okta');
+  const [orgUrl, setOrgUrl] = React.useState('');
+  const [apiToken, setApiToken] = React.useState('');
+
+  const mutation = useMutation({
+    mutationFn: () =>
+      apiClient.post(
+        '/connector-configs',
+        {
+          connectorType: 'okta',
+          displayName,
+          credentials: { type: 'api_token', token: apiToken },
+          config: { orgUrl },
+        },
+        token,
+      ),
+    onSuccess: onConnected,
+  });
+
+  return (
+    <form onSubmit={(e) => { e.preventDefault(); mutation.mutate(); }} className="space-y-4">
+      <div className="space-y-2">
+        <Label>Display name</Label>
+        <Input value={displayName} onChange={(e) => setDisplayName(e.target.value)} required />
+      </div>
+      <div className="space-y-2">
+        <Label>Okta org URL</Label>
+        <Input value={orgUrl} onChange={(e) => setOrgUrl(e.target.value)} placeholder="https://your-org.okta.com" required />
+      </div>
+      <div className="space-y-2">
+        <Label>API token</Label>
+        <Input type="password" value={apiToken} onChange={(e) => setApiToken(e.target.value)} placeholder="00..." required />
+        <p className="text-xs text-muted-foreground">
+          Token needs okta.users.read and okta.factors.read scopes.
+        </p>
+      </div>
+      <div className="flex justify-end gap-2 pt-2">
+        <Button type="submit" disabled={mutation.isPending}>
+          {mutation.isPending ? 'Connecting...' : 'Connect Okta'}
         </Button>
       </div>
       {mutation.isError && (

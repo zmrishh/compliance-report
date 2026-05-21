@@ -6,12 +6,13 @@ import { ConnectorSyncService } from './connector-sync.service.js';
 import { ConnectorConfigsModule } from '../connector-configs/connector-configs.module.js';
 import { SecretsModule } from '../secrets/secrets.module.js';
 import { NormalizerModule } from '../normalizer/normalizer.module.js';
+import { SlackModule } from '../integrations/slack/slack.module.js';
 import type { Env } from '../config/config.schema.js';
 
 export const REDIS_CLIENT = Symbol('REDIS_CLIENT');
 
 @Module({
-  imports: [ConnectorConfigsModule, SecretsModule, NormalizerModule],
+  imports: [ConnectorConfigsModule, SecretsModule, NormalizerModule, SlackModule],
   providers: [
     {
       provide: REDIS_CLIENT,

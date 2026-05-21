@@ -214,6 +214,60 @@ export const SOC2_SECURITY_CONTROLS: CatalogControl[] = [
       'Ensure the GitHub connector is active and running successfully. The connector ingests audit log events into the compliance platform evidence store, extending retention beyond GitHub\'s default 180-day window.',
     evidenceSources: ['github:org:audit_log'],
   },
+  // ─── Google Workspace ─────────────────────────────────────────────────────────
+  {
+    id: 'soc2:cc6.1:gws-mfa-enrolled',
+    framework: FRAMEWORKS.SOC2_SECURITY,
+    controlId: 'CC6.1',
+    title: 'Google Workspace 2-Step Verification enrolled for all users',
+    description:
+      'All active Google Workspace users must be enrolled in 2-Step Verification (2SV) to prevent unauthorized account access.',
+    severity: SEVERITY.HIGH,
+    testFnKey: 'soc2:cc6.1:gws-mfa-enrolled',
+    remediationGuidance:
+      'In the Google Admin console, navigate to Security > 2-Step Verification and enable enrollment for the entire organization. Set enforcement to "On" for all users. Use the Directory API report to identify non-enrolled users.',
+    evidenceSources: ['google:user:directory'],
+  },
+  {
+    id: 'soc2:cc6.3:gws-dormant-users',
+    framework: FRAMEWORKS.SOC2_SECURITY,
+    controlId: 'CC6.3',
+    title: 'No dormant Google Workspace accounts with active status',
+    description:
+      'Google Workspace user accounts that have not logged in for more than 90 days and are not suspended represent unnecessary access risk.',
+    severity: SEVERITY.MEDIUM,
+    testFnKey: 'soc2:cc6.3:gws-dormant-users',
+    remediationGuidance:
+      'Review inactive accounts using the Google Admin console Reports > User activity. Suspend accounts for users who have left the organization. For contractors, set account expiration dates.',
+    evidenceSources: ['google:user:directory'],
+  },
+  // ─── Okta ─────────────────────────────────────────────────────────────────────
+  {
+    id: 'soc2:cc6.1:okta-mfa-enrolled',
+    framework: FRAMEWORKS.SOC2_SECURITY,
+    controlId: 'CC6.1',
+    title: 'Okta MFA factor enrolled for all active users',
+    description:
+      'All active Okta users must have at least one MFA factor enrolled to ensure strong authentication across all SSO-protected applications.',
+    severity: SEVERITY.HIGH,
+    testFnKey: 'soc2:cc6.1:okta-mfa-enrolled',
+    remediationGuidance:
+      'In the Okta Admin console, navigate to Security > Authenticators and configure a required factor enrollment policy. Set the authenticator enrollment policy to require at least one factor (TOTP app or hardware key) for all users.',
+    evidenceSources: ['okta:factor:enrollment'],
+  },
+  {
+    id: 'soc2:cc6.3:okta-dormant-users',
+    framework: FRAMEWORKS.SOC2_SECURITY,
+    controlId: 'CC6.3',
+    title: 'No dormant active Okta users (90-day inactivity)',
+    description:
+      'Active Okta users who have not authenticated in more than 90 days represent unnecessary access risk and should be deprovisioned or suspended.',
+    severity: SEVERITY.MEDIUM,
+    testFnKey: 'soc2:cc6.3:okta-dormant-users',
+    remediationGuidance:
+      'Use the Okta System Log or the Users API to identify users with lastLogin older than 90 days. Deprovision or suspend stale accounts. Automate lifecycle management with Okta Workflows or SCIM provisioning.',
+    evidenceSources: ['okta:user:directory'],
+  },
 ];
 
 export const CATALOG_BY_ID = Object.fromEntries(

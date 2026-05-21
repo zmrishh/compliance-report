@@ -64,6 +64,11 @@ export const AUDIT_ACTION = {
   MEMBER_ADDED: 'member.added',
   MEMBER_REMOVED: 'member.removed',
   EVALUATE_TRIGGERED: 'evaluate.triggered',
+  AI_DRAFT: 'ai.draft',
+  JIRA_TICKET_CREATED: 'jira.ticket_created',
+  SHARE_CREATED: 'share.created',
+  SHARE_REVOKED: 'share.revoked',
+  EXPORT_DOWNLOADED: 'export.downloaded',
 } as const;
 
 export type AuditAction = (typeof AUDIT_ACTION)[keyof typeof AUDIT_ACTION];
@@ -117,7 +122,15 @@ export const CONNECTOR_SCHEDULE_HOURS: Record<ConnectorType, number> = {
   jira: 12,
 };
 
+export const INTEGRATION_TYPE = {
+  JIRA: 'jira',
+  SLACK: 'slack',
+} as const;
+
+export type IntegrationType = (typeof INTEGRATION_TYPE)[keyof typeof INTEGRATION_TYPE];
+
 export const EVALUATE_RATE_LIMIT_HOURS = 1;
 export const PRESIGNED_URL_TTL_SECONDS = 900; // 15 minutes
 export const IAM_KEY_MAX_AGE_DAYS = 90;
 export const DORMANT_USER_DAYS = 90;
+export const AUDITOR_SHARE_MAX_EXPIRY_DAYS = 90;

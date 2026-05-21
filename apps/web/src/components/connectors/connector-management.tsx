@@ -48,13 +48,21 @@ export function ConnectorManagement({
       type: 'aws',
       label: 'Amazon Web Services',
       description: 'IAM credential reports, Security Hub findings, Config compliance, and account metadata.',
-      logoSrc: '/logos/aws.svg',
     },
     {
       type: 'github',
       label: 'GitHub',
       description: 'Organization audit log, repository branch protection rules, and required review settings.',
-      logoSrc: '/logos/github.svg',
+    },
+    {
+      type: 'google_workspace',
+      label: 'Google Workspace',
+      description: 'User directory, 2-Step Verification enrollment, and group memberships via Admin SDK.',
+    },
+    {
+      type: 'okta',
+      label: 'Okta',
+      description: 'User directory, MFA factor enrollment, and group memberships via Okta API.',
     },
   ];
 
