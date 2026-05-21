@@ -2,7 +2,7 @@
 
 import Link from 'next/link';
 import { useParams, usePathname } from 'next/navigation';
-import { BarChart3, Plug, Zap } from 'lucide-react';
+import { BarChart3, BookOpen, Building2, ClipboardList, Plug, Webhook, Zap } from 'lucide-react';
 import { cn } from '@/lib/utils';
 
 export function WorkspaceSidebarNav() {
@@ -14,8 +14,12 @@ export function WorkspaceSidebarNav() {
 
   const links = [
     { href: `/workspaces/${workspaceId}/readiness`, label: 'Readiness', icon: BarChart3 },
+    { href: `/workspaces/${workspaceId}/policies`, label: 'Policies', icon: BookOpen },
+    { href: `/workspaces/${workspaceId}/access-reviews`, label: 'Access Reviews', icon: ClipboardList },
     { href: `/workspaces/${workspaceId}/settings/connectors`, label: 'Connectors', icon: Plug },
     { href: `/workspaces/${workspaceId}/settings/integrations`, label: 'Integrations', icon: Zap },
+    { href: `/workspaces/${workspaceId}/settings/webhooks`, label: 'Webhooks', icon: Webhook },
+    { href: `/org/vendors`, label: 'Vendors', icon: Building2 },
   ];
 
   return (

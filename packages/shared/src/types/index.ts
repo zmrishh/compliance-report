@@ -1,4 +1,6 @@
 import type {
+  AccessReviewDecision,
+  AccessReviewStatus,
   AuditAction,
   ConnectorRunStatus,
   ConnectorType,
@@ -6,8 +8,14 @@ import type {
   EvidenceSourceType,
   Framework,
   IntegrationType,
+  NotificationEvent,
+  PolicyStatus,
+  PolicyType,
   Severity,
   SourceType,
+  VendorCategory,
+  VendorRiskRating,
+  WebhookEvent,
   WorkspaceRole,
 } from '../constants/index';
 
@@ -224,4 +232,94 @@ export interface AiDraftResult {
   content: string;
   model: string;
   generatedAt: Date;
+}
+
+export interface Policy {
+  id: string;
+  workspaceId: string;
+  orgId: string;
+  controlId: string | null;
+  title: string;
+  type: PolicyType;
+  status: PolicyStatus;
+  version: number;
+  content: string;
+  createdBy: string;
+  publishedBy: string | null;
+  publishedAt: Date | null;
+  createdAt: Date;
+  updatedAt: Date;
+}
+
+export interface ReadinessSnapshotPoint {
+  snapshottedAt: Date;
+  score: number;
+  passCount: number;
+  failCount: number;
+  unknownCount: number;
+  waivedCount: number;
+  totalCount: number;
+}
+
+export interface AccessReviewCampaign {
+  id: string;
+  workspaceId: string;
+  orgId: string;
+  name: string;
+  connectorType: string;
+  status: AccessReviewStatus;
+  dueDate: Date;
+  createdBy: string;
+  completedAt: Date | null;
+  createdAt: Date;
+  updatedAt: Date;
+}
+
+export interface AccessReviewItem {
+  id: string;
+  campaignId: string;
+  workspaceId: string;
+  userIdExternal: string;
+  userEmail: string;
+  userDisplayName: string;
+  accessLevel: string;
+  reviewerId: string | null;
+  decision: AccessReviewDecision;
+  reviewedAt: Date | null;
+  notes: string | null;
+  createdAt: Date;
+}
+
+export interface NotificationPreference {
+  id: string;
+  userId: string;
+  orgId: string;
+  eventType: NotificationEvent;
+  enabled: boolean;
+}
+
+export interface WebhookConfig {
+  id: string;
+  orgId: string;
+  workspaceId: string | null;
+  url: string;
+  events: WebhookEvent[];
+  isActive: boolean;
+  createdAt: Date;
+  updatedAt: Date;
+}
+
+export interface Vendor {
+  id: string;
+  orgId: string;
+  name: string;
+  website: string | null;
+  category: VendorCategory;
+  riskRating: VendorRiskRating;
+  reviewCycleDays: number;
+  lastReviewedAt: Date | null;
+  reviewedBy: string | null;
+  notes: string | null;
+  createdAt: Date;
+  updatedAt: Date;
 }

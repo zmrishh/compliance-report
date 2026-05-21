@@ -1,5 +1,6 @@
 export const FRAMEWORKS = {
   SOC2_SECURITY: 'soc2:security',
+  ISO27001: 'iso27001',
 } as const;
 
 export type Framework = (typeof FRAMEWORKS)[keyof typeof FRAMEWORKS];
@@ -69,6 +70,12 @@ export const AUDIT_ACTION = {
   SHARE_CREATED: 'share.created',
   SHARE_REVOKED: 'share.revoked',
   EXPORT_DOWNLOADED: 'export.downloaded',
+  POLICY_PUBLISHED: 'policy.published',
+  POLICY_ARCHIVED: 'policy.archived',
+  ACCESS_REVIEW_CREATED: 'access_review.created',
+  ACCESS_REVIEW_COMPLETED: 'access_review.completed',
+  VENDOR_CREATED: 'vendor.created',
+  VENDOR_UPDATED: 'vendor.updated',
 } as const;
 
 export type AuditAction = (typeof AUDIT_ACTION)[keyof typeof AUDIT_ACTION];
@@ -128,6 +135,76 @@ export const INTEGRATION_TYPE = {
 } as const;
 
 export type IntegrationType = (typeof INTEGRATION_TYPE)[keyof typeof INTEGRATION_TYPE];
+
+export const POLICY_STATUS = {
+  DRAFT: 'draft',
+  PUBLISHED: 'published',
+  ARCHIVED: 'archived',
+} as const;
+
+export type PolicyStatus = (typeof POLICY_STATUS)[keyof typeof POLICY_STATUS];
+
+export const POLICY_TYPE = {
+  POLICY: 'policy',
+  PROCEDURE: 'procedure',
+  RUNBOOK: 'runbook',
+} as const;
+
+export type PolicyType = (typeof POLICY_TYPE)[keyof typeof POLICY_TYPE];
+
+export const ACCESS_REVIEW_STATUS = {
+  OPEN: 'open',
+  COMPLETED: 'completed',
+  EXPIRED: 'expired',
+} as const;
+
+export type AccessReviewStatus = (typeof ACCESS_REVIEW_STATUS)[keyof typeof ACCESS_REVIEW_STATUS];
+
+export const ACCESS_REVIEW_DECISION = {
+  PENDING: 'pending',
+  APPROVED: 'approved',
+  REVOKED: 'revoked',
+} as const;
+
+export type AccessReviewDecision = (typeof ACCESS_REVIEW_DECISION)[keyof typeof ACCESS_REVIEW_DECISION];
+
+export const NOTIFICATION_EVENT = {
+  CONTROL_REGRESSION: 'control.regression',
+  CONNECTOR_FAILED: 'connector.failed',
+  ACCESS_REVIEW_ASSIGNED: 'access_review.assigned',
+  ACCESS_REVIEW_DUE: 'access_review.due',
+  EXPORT_READY: 'export.ready',
+} as const;
+
+export type NotificationEvent = (typeof NOTIFICATION_EVENT)[keyof typeof NOTIFICATION_EVENT];
+
+export const WEBHOOK_EVENT = {
+  CONTROL_REGRESSION: 'control.regression',
+  READINESS_SCORE_CHANGED: 'readiness.score_changed',
+  CONNECTOR_FAILED: 'connector.failed',
+  ACCESS_REVIEW_COMPLETED: 'access_review.completed',
+} as const;
+
+export type WebhookEvent = (typeof WEBHOOK_EVENT)[keyof typeof WEBHOOK_EVENT];
+
+export const VENDOR_CATEGORY = {
+  SAAS: 'saas',
+  INFRASTRUCTURE: 'infrastructure',
+  PAYMENTS: 'payments',
+  HR: 'hr',
+  OTHER: 'other',
+} as const;
+
+export type VendorCategory = (typeof VENDOR_CATEGORY)[keyof typeof VENDOR_CATEGORY];
+
+export const VENDOR_RISK_RATING = {
+  LOW: 'low',
+  MEDIUM: 'medium',
+  HIGH: 'high',
+  CRITICAL: 'critical',
+} as const;
+
+export type VendorRiskRating = (typeof VENDOR_RISK_RATING)[keyof typeof VENDOR_RISK_RATING];
 
 export const EVALUATE_RATE_LIMIT_HOURS = 1;
 export const PRESIGNED_URL_TTL_SECONDS = 900; // 15 minutes

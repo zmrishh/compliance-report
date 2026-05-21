@@ -5,7 +5,11 @@ import {
   CONTROL_STATUS,
   FRAMEWORKS,
   INTEGRATION_TYPE,
+  POLICY_TYPE,
   SEVERITY,
+  VENDOR_CATEGORY,
+  VENDOR_RISK_RATING,
+  WEBHOOK_EVENT,
   WORKSPACE_ROLE,
 } from '../constants/index';
 
@@ -32,7 +36,7 @@ export const createOrganizationSchema = z.object({
 export const createWorkspaceSchema = z.object({
   name: z.string().min(1).max(200),
   description: z.string().max(1000).optional(),
-  framework: z.enum([FRAMEWORKS.SOC2_SECURITY]),
+  framework: z.enum([FRAMEWORKS.SOC2_SECURITY, FRAMEWORKS.ISO27001]),
   systemBoundary: z.string().max(2000).optional(),
 });
 
@@ -220,6 +224,94 @@ export const createAuditorShareSchema = z.object({
 });
 
 export type CreateAuditorShareDto = z.infer<typeof createAuditorShareSchema>;
+
+// ─── Policy ───────────────────────────────────────────────────────────────────
+
+export const createPolicySchema = z.object({
+  title: z.string().min(1).max(300),
+  type: z.enum([POLICY_TYPE.POLICY, POLICY_TYPE.PROCEDURE, POLICY_TYPE.RUNBOOK]),
+  content: z.string().max(500_000).default(''),
+  controlId: z.string().optional(),
+});
+
+export const updatePolicySchema = z.object({
+  title: z.string().min(1).max(300).optional(),
+  content: z.string().max(500_000).optional(),
+});
+
+export type CreatePolicyDto = z.infer<typeof createPolicySchema>;
+export type UpdatePolicyDto = z.infer<typeof updatePolicySchema>;
+
+// ─── Access Review ────────────────────────────────────────────────────────────
+
+export const createAccessReviewCampaignSchema = z.object({
+  name: z.string().min(1).max(200),
+  connectorType: z.enum([CONNECTOR_TYPE.GOOGLE_WORKSPACE, CONNECTOR_TYPE.OKTA]),
+  dueDate: z.string().datetime({ offset: true }),
+});
+
+export const reviewItemSchema = z.object({
+  decision: z.enum(['approved', 'revoked']),
+  notes: z.string().max(2000).optional(),
+});
+
+export type CreateAccessReviewCampaignDto = z.infer<typeof createAccessReviewCampaignSchema>;
+export type ReviewItemDto = z.infer<typeof reviewItemSchema>;
+
+// ─── Webhook ──────────────────────────────────────────────────────────────────
+
+export const createWebhookConfigSchema = z.object({
+  url: z.string().url(),
+  events: z.array(z.enum([
+    WEBHOOK_EVENT.CONTROL_REGRESSION,
+    WEBHOOK_EVENT.READINESS_SCORE_CHANGED,
+    WEBHOOK_EVENT.CONNECTOR_FAILED,
+    WEBHOOK_EVENT.ACCESS_REVIEW_COMPLETED,
+  ])).min(1),
+  workspaceId: z.string().optional(),
+});
+
+export type CreateWebhookConfigDto = z.infer<typeof createWebhookConfigSchema>;
+
+// ─── Vendor ───────────────────────────────────────────────────────────────────
+
+export const createVendorSchema = z.object({
+  name: z.string().min(1).max(200),
+  website: z.string().url().optional(),
+  category: z.enum([
+    VENDOR_CATEGORY.SAAS,
+    VENDOR_CATEGORY.INFRASTRUCTURE,
+    VENDOR_CATEGORY.PAYMENTS,
+    VENDOR_CATEGORY.HR,
+    VENDOR_CATEGORY.OTHER,
+  ]),
+  riskRating: z.enum([
+    VENDOR_RISK_RATING.LOW,
+    VENDOR_RISK_RATING.MEDIUM,
+    VENDOR_RISK_RATING.HIGH,
+    VENDOR_RISK_RATING.CRITICAL,
+  ]),
+  reviewCycleDays: z.coerce.number().int().min(30).max(730).default(365),
+  notes: z.string().max(5000).optional(),
+});
+
+export const updateVendorSchema = createVendorSchema.partial().extend({
+  lastReviewedAt: z.string().datetime({ offset: true }).optional(),
+});
+
+export type CreateVendorDto = z.infer<typeof createVendorSchema>;
+export type UpdateVendorDto = z.infer<typeof updateVendorSchema>;
+
+// ─── Notification Preferences ─────────────────────────────────────────────────
+
+export const updateNotificationPreferencesSchema = z.object({
+  preferences: z.array(z.object({
+    eventType: z.string().min(1),
+    enabled: z.boolean(),
+  })),
+});
+
+export type UpdateNotificationPreferencesDto = z.infer<typeof updateNotificationPreferencesSchema>;
 
 // ─── Outbound schemas (strip sensitive fields) ────────────────────────────────
 

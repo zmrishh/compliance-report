@@ -7,6 +7,7 @@ import {
   Param,
   Patch,
   Post,
+  Query,
   UseGuards,
 } from '@nestjs/common';
 import {
@@ -22,12 +23,16 @@ import { Roles } from '../common/decorators/roles.decorator.js';
 import { CurrentUser } from '../common/decorators/current-user.decorator.js';
 import { ZodValidationPipe } from '../common/pipes/zod-validation.pipe.js';
 import { ReadinessService } from './readiness.service.js';
+import { SnapshotService } from './snapshot.service.js';
 
 @Controller('workspaces/:workspaceId/readiness')
 @UseGuards(AuthGuard, RbacGuard)
 @Roles(WORKSPACE_ROLE.VIEWER)
 export class ReadinessController {
-  constructor(private readonly readinessService: ReadinessService) {}
+  constructor(
+    private readonly readinessService: ReadinessService,
+    private readonly snapshotService: SnapshotService,
+  ) {}
 
   @Get()
   getSummary(
@@ -69,6 +74,26 @@ export class ReadinessController {
       workspaceId,
       body as { ownerId?: string | null; notes?: string | null },
     );
+  }
+
+  @Get('snapshots')
+  @Roles(WORKSPACE_ROLE.VIEWER)
+  getSnapshots(
+    @Param('workspaceId') workspaceId: string,
+    @CurrentUser() user: AuthenticatedUser,
+    @Query('days') daysStr?: string,
+  ) {
+    const days = Math.min(Math.max(parseInt(daysStr ?? '30', 10), 7), 90);
+    return this.snapshotService.getSnapshots(workspaceId, user.orgId, isNaN(days) ? 30 : days);
+  }
+
+  @Get('controls/:controlStateId/history')
+  @Roles(WORKSPACE_ROLE.VIEWER)
+  getControlHistory(
+    @Param('workspaceId') workspaceId: string,
+    @Param('controlStateId') controlStateId: string,
+  ) {
+    return this.snapshotService.getControlHistory(controlStateId, workspaceId);
   }
 
   @Post('controls/:controlStateId/waive')

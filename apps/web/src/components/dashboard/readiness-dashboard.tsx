@@ -11,6 +11,12 @@ import { ControlTable } from './control-table';
 import { FailedControlsPanel } from './failed-controls-panel';
 import { ConnectorStatusBar } from './connector-status-bar';
 import { AuditorShareButton } from './auditor-share-button';
+import dynamic from 'next/dynamic';
+
+const ReadinessTrendChart = dynamic(
+  () => import('./readiness-trend-chart').then((m) => m.ReadinessTrendChart),
+  { ssr: false, loading: () => <div className="h-48 rounded-lg border animate-pulse bg-muted" /> },
+);
 import type { ReadinessSummary, ControlStateWithControl } from '@/types/readiness';
 
 export function ReadinessDashboard({
@@ -128,6 +134,8 @@ export function ReadinessDashboard({
           </div>
         )}
       </div>
+
+      <ReadinessTrendChart workspaceId={workspaceId} />
 
       {controls && controls.length > 0 && (
         <ControlTable

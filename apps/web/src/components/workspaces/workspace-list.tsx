@@ -29,6 +29,7 @@ export function WorkspaceList({ token }: { token: string }) {
   const [open, setOpen] = useState(false);
   const [name, setName] = useState('');
   const [description, setDescription] = useState('');
+  const [framework, setFramework] = useState<'soc2:security' | 'iso27001'>('soc2:security');
 
   const { data: workspaces, isLoading } = useQuery({
     queryKey: ['workspaces'],
@@ -36,20 +37,21 @@ export function WorkspaceList({ token }: { token: string }) {
   });
 
   const createMutation = useMutation({
-    mutationFn: (values: { name: string; description?: string }) =>
-      apiClient.post<Workspace>('/workspaces', { ...values, framework: 'soc2:security' }, token),
+    mutationFn: (values: { name: string; description?: string; framework: string }) =>
+      apiClient.post<Workspace>('/workspaces', values, token),
     onSuccess: () => {
       void queryClient.invalidateQueries({ queryKey: ['workspaces'] });
       setOpen(false);
       setName('');
       setDescription('');
+      setFramework('soc2:security');
     },
   });
 
   function handleCreate(e: React.FormEvent) {
     e.preventDefault();
     if (!name.trim()) return;
-    createMutation.mutate({ name: name.trim(), description: description.trim() || undefined });
+    createMutation.mutate({ name: name.trim(), description: description.trim() || undefined, framework });
   }
 
   if (isLoading) {
@@ -97,6 +99,17 @@ export function WorkspaceList({ token }: { token: string }) {
                   rows={3}
                 />
               </div>
+              <div className="grid gap-2">
+                <Label>Compliance framework</Label>
+                <select
+                  className="flex h-9 w-full rounded-md border border-input bg-background px-3 py-1 text-sm shadow-sm transition-colors focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring"
+                  value={framework}
+                  onChange={(e) => setFramework(e.target.value as typeof framework)}
+                >
+                  <option value="soc2:security">SOC 2 — Security</option>
+                  <option value="iso27001">ISO 27001</option>
+                </select>
+              </div>
               <div className="flex justify-end gap-2">
                 <Button type="button" variant="outline" onClick={() => setOpen(false)}>
                   Cancel
@@ -141,7 +154,7 @@ export function WorkspaceList({ token }: { token: string }) {
                   <div className="flex items-center gap-2">
                     <span className="font-medium">{ws.name}</span>
                     <Badge variant="outline" className="text-xs">
-                      {ws.framework === 'soc2:security' ? 'SOC 2 Security' : ws.framework}
+                      {ws.framework === 'soc2:security' ? 'SOC 2 Security' : ws.framework === 'iso27001' ? 'ISO 27001' : ws.framework}
                     </Badge>
                     <Badge variant="secondary" className="text-xs capitalize">
                       {ws.userRole}

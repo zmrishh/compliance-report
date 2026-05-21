@@ -21,6 +21,11 @@ import { AiModule } from './ai/ai.module.js';
 import { IntegrationsModule } from './integrations/integrations.module.js';
 import { AuditorShareModule } from './auditor-share/auditor-share.module.js';
 import { ExportModule } from './export/export.module.js';
+import { PolicyModule } from './policy/policy.module.js';
+import { AccessReviewModule } from './access-review/access-review.module.js';
+import { NotificationModule } from './notifications/notification.module.js';
+import { WebhookModule } from './webhooks/webhook.module.js';
+import { VendorModule } from './vendors/vendor.module.js';
 
 @Module({
   imports: [
@@ -43,6 +48,11 @@ import { ExportModule } from './export/export.module.js';
     IntegrationsModule,
     AuditorShareModule,
     ExportModule,
+    PolicyModule,
+    AccessReviewModule,
+    NotificationModule,
+    WebhookModule,
+    VendorModule,
   ],
   providers: [
     {

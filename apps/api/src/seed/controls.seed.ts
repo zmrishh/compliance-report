@@ -1,10 +1,10 @@
 import { sql } from 'drizzle-orm';
-import { SOC2_SECURITY_CONTROLS } from '@compliance/shared';
+import { ALL_CONTROLS_CATALOG } from '@compliance/shared';
 import type { DbClient } from '@compliance/db';
 import { controls } from '@compliance/db';
 
 export async function seedControls(db: DbClient): Promise<void> {
-  const values = SOC2_SECURITY_CONTROLS.map((c) => ({
+  const values = ALL_CONTROLS_CATALOG.map((c) => ({
     id: c.id,
     framework: c.framework,
     controlId: c.controlId,
@@ -32,5 +32,5 @@ export async function seedControls(db: DbClient): Promise<void> {
       },
     });
 
-  console.warn(`Seeded ${values.length} SOC 2 Security controls`);
+  console.warn(`Seeded ${values.length} controls (SOC 2 + ISO 27001)`);
 }
