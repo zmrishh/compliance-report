@@ -1,0 +1,32 @@
+{
+  "name": "@compliance/db",
+  "version": "0.0.1",
+  "private": true,
+  "main": "./src/index.ts",
+  "types": "./src/index.ts",
+  "exports": {
+    ".": {
+      "types": "./src/index.ts",
+      "default": "./src/index.ts"
+    },
+    "./schema": "./src/schema/index.ts",
+    "./client": "./src/client.ts"
+  },
+  "scripts": {
+    "build": "tsc",
+    "lint": "eslint src --ext .ts",
+    "type-check": "tsc --noEmit",
+    "migrate": "drizzle-kit migrate",
+    "generate": "drizzle-kit generate",
+    "studio": "drizzle-kit studio"
+  },
+  "dependencies": {
+    "@compliance/shared": "workspace:*",
+    "drizzle-orm": "^0.31.4",
+    "postgres": "^3.4.4"
+  },
+  "devDependencies": {
+    "drizzle-kit": "^0.22.7",
+    "typescript": "^5.5.2"
+  }
+}
